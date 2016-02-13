@@ -2,6 +2,8 @@
 ''' DON'T TOUCH THESE FIRST LINES! '''
 ''' ============================== '''
 from PyoConnect import *
+import serial
+
 myo = Myo(sys.argv[1] if len(sys.argv) >= 2 else None) 
 ''' ============================== '''
 
@@ -9,9 +11,11 @@ myo = Myo(sys.argv[1] if len(sys.argv) >= 2 else None)
 
 # Edit here:
 
+global currentState 
+currentState = "0"
 
 def onPoseEdge(pose, edge):
-	print("onPoseEdge: "+pose+", "+edge)
+	#print("onPoseEdge: "+pose+", "+edge)
 	if (pose == "fist" and edge == "on"):
 		myo.rotSetCenter()
 
@@ -20,25 +24,43 @@ def onUnlock():
 	myo.unlock("hold")
 
 def onPeriodic():
+	global currentState
 	if (not myo.isUnlocked()):
 		myo.unlock("hold")
 		#print("***********UNLOCKED*************")	 
-		 
-	#roll_w = (myo.rotRoll() + math.pi)/(math.pi * 2.0) * 18
-        #pitch_w = (myo.rotPitch() + math.pi/2.0)/math.pi * 18
-        #yaw_w = (myo.rotYaw() + math.pi)/(math.pi * 2.0) * 18	
-	#print("onPeriodic: yaw= "+str(yaw_w)+", pitch= "+str(pitch_w)+", roll= "+str(roll_w))
+	if (myo.getPose == "fist"):
+		 myo.rotSetCenter()
+	roll_w = int((myo.rotRoll() + math.pi)/(math.pi * 2.0) * 18)
+        pitch_w = int((myo.rotPitch() + math.pi/2.0)/math.pi * 18)
+        yaw_w = int((myo.rotYaw() + math.pi)/(math.pi * 2.0) * 18)	
+	print("onPeriodic: yaw= "+str(yaw_w)+", pitch= "+str(pitch_w)+", roll= "+str(roll_w))
+	if pitch_w < 5:
+		#trigger right turn signal
+		nextState = "2"
+	elif yaw_w < 5:
+		#trigger left turn signal
+		nextState = "1"
+	else:
+		#trigger no turn signal
+		nextState = "3"
+	
+	if (nextState != currentState):
+		currentState = nextState
+		ser.write(currentState)
 
 def onBoxChange(boxNumber, state):
 	print("onBoxChange: "+str(boxNumber)+", "+str(state))
 	if (boxNumber == 7 or boxNumber == 8) and state == "on":
 		# trigger left turn signal
+		ser.write('1')
 		pass
 	elif (boxNumber == 6 or boxNumber == 5 or boxNumber == 4 and state == "on"):
 		# trigger right turn signal
+		ser.write('2')
 		pass
 	else:
 		# turn off turn signal
+		ser.write('3')
 		pass
  
 # Stop editting
@@ -51,11 +73,14 @@ myo.onPeriodic = onPeriodic
 #myo.onWear = onWear
 #myo.onUnwear = onUnwear
 #myo.onEMG = onEMG
-myo.onBoxChange = onBoxChange
+#myo.onBoxChange = onBoxChange
 
 ''' DON'T TOUCH BELOW THIS LINE! '''
 ''' ============================ '''
 myo.connect()
+myo.setLockingPolicy("none")
+myo.unlock("hold")
+ser = serial.Serial('/dev/ttyACM0')  # open serial port
 while True:
 	myo.run()
 	myo.tick()
