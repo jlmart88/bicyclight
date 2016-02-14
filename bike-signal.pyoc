@@ -37,16 +37,22 @@ def onPeriodic():
 	if pitch_w < 5:
 		#trigger right turn signal
 		nextState = "2"
+		vibrations = [1, 1, 1]
 	elif yaw_w < 5:
 		#trigger left turn signal
 		nextState = "1"
+		vibrations = [1, 1]
 	else:
 		#trigger no turn signal
 		nextState = "3"
+		vibrations = [3]
 	
 	if (nextState != currentState):
 		currentState = nextState
 		ser.write(currentState)
+		for vibration in vibrations:
+			myo.vibrate(vibration)
+
 
 def onBoxChange(boxNumber, state):
 	print("onBoxChange: "+str(boxNumber)+", "+str(state))
