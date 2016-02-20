@@ -22,7 +22,7 @@ byte addresses[][6] = {"1Node","2Node"};
 #define INT 2
 #define SCL A4
 #define SDA A5
-#define INIT_YAW 0
+#define INIT_YAW 185
 #define INIT_PITCH 0
 #define INIT_ROLL 90
 
@@ -31,11 +31,11 @@ byte addresses[][6] = {"1Node","2Node"};
 #define LED2 A1
 
 // timing variables
-int centerBlinkOnInterval = 500;
-int centerBlinkOffInterval = 500;
+int centerBlinkOnInterval = 200;
+int centerBlinkOffInterval = 200;
 
-int sideBlinkOnInterval = 500;
-int sideBlinkOffInterval = 500;
+int sideBlinkOnInterval = 200;
+int sideBlinkOffInterval = 200;
 
 // state variables
 enum TurnState {
@@ -45,9 +45,9 @@ enum TurnState {
 };
 TurnState turnState = Center;
 int centerState = LOW;
-int centerBlinkMillis = 0;
+long centerBlinkMillis = 0;
 int sideState = LOW;
-int sideBlinkMillis = 0;
+long sideBlinkMillis = 0;
 
 int ret;
 
